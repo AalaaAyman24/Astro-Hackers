@@ -25,15 +25,7 @@ def after_request(response):
 
 @app.route('/')
 def index():
-    if session.get("user_id"):
-
-        result = cur.execute("SELECT * FROM Student WHERE ID = ?", (session["user_id"],)).fetchall()
-        if result:
-            return render_template("dash.html", log=True)
-        else:
-            return redirect('/teachers_info')
-    else:
-        return render_template("index.html", log=False)
+    return render_template("index.html", log=False)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -52,15 +44,12 @@ def login():
         if None in [f.get('username'), f.get('password')] or '' in [f.get('username'), f.get('password')]:
             return error_message("User does not exist or password is invalid")
         
-        f1, f2 =  False, False
         student = cur.execute("SELECT * FROM Student WHERE ID = ?", (f.get("username"),))
         s_res = student.fetchall().copy()
-        if s_res: f1 = True
         teacher = cur.execute("SELECT * FROM Teacher WHERE ID = ?", (f.get("username"),))
         t_res = teacher.fetchall().copy()
-        if t_res: f2 = True
         type = "Teacher"
-        if not f1 and not f2:
+        if not s_res and not t_res:
             return error_message("User does not exist or password is invalid")
         elif s_res:
             type = "Student"
@@ -96,16 +85,12 @@ def register():
         if None in [f.get(attribute) for attribute in ["username", "password", "age", "inlineRadioOptions", "type", "name"]] or '' in [f.get(attribute) for attribute in ["username", "password", "age", "inlineRadioOptions", "type", "name"]]:
             ...#return error_message()
         
-        f1, f2, = False, False
-        student = cur.execute('SELECT * FROM Student WHERE ID = ?', (f.get("username"),))
+        student = cur.execute('SELECT age FROM Student WHERE age = ?', (f.get("username"),))
         s_res = student.fetchall().copy()
-        if s_res: f1 = True
-        teacher = cur.execute('SELECT * FROM Teacher WHERE ID = ?', (f.get("username"),))
+        teacher = cur.execute('SELECT ID FROM Teacher WHERE ID = ?', (f.get("username"),))
         t_res = teacher.fetchall().copy()
-        if t_res: f2 = True
 
-
-        if f1 or f2:
+        if s_res or t_res:
             return error_message('User already exists with this username :(')
 
         type = "Teacher" if f.get("type") == "option2" else "Student"
@@ -137,25 +122,8 @@ def teachers_info():
             }
             tbl.append(tbl_row)
 
-        print(tbl)
+       
 
         return render_template("teachers_info.html", tbl=tbl)
 
 
-@app.route('/eclipse', methods=['GET', 'POST'])
-def eclipse():
-    return render_template('eclipse.html')
-
-
-@app.route('/season', methods=['GET', 'POST'])
-def season():
-    return render_template('season.html')
-
-
-@app.route('/whatiseclipse', methods=['GET', 'POST'])
-def whatiseclipse():
-    return render_template('whatIsEclipses.html')
-
-@app.route('/impact', methods=['GET', 'POST'])
-def impact():
-    return render_template('impact.html')
